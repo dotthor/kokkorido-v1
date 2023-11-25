@@ -5,7 +5,7 @@
     // The width and height of the captured photo. We will set the
     // width to the value defined here, but the height will be
     // calculated based on the aspect ratio of the input stream.
-
+    let message = "";
     const width = 320; // We will scale the photo width to this
     let height = 0; // This will be computed based on the input stream
 
@@ -131,6 +131,7 @@
         const worker = await createWorker("eng");
         const ret = await worker.recognize(img);
         console.log(ret.data.text);
+        message += ret.data.text;
         await worker.terminate();
     }
 
@@ -150,3 +151,4 @@
 <div class="output">
     <img id="photo" alt="The screen capture will appear in this box." />
 </div>
+<p>{message}</p>
