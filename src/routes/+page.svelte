@@ -2,15 +2,19 @@
     import { onMount } from "svelte";
     import { createWorker, createScheduler } from "tesseract.js";
 
+    let scanning = true;
+
+    let _stream;
+
     // The width and height of the captured photo. We will set the
     // width to the value defined here, but the height will be
     // calculated based on the aspect ratio of the input stream.
     let message = "";
     const width = 320; // We will scale the photo width to this
-    let height = 0; // This will be computed based on the input stream
+    let height = 240; // This will be computed based on the input stream
 
     // |streaming| indicates whether or not we're currently streaming
-    // video from the camera. Obviously, we start at false.
+    // video from the camera. Obviously, we start at false. 63.5 : 88 = 320 = x
 
     let streaming = false;
 
@@ -22,25 +26,7 @@
     let photo = null;
     let startbutton = null;
 
-    function showViewLiveResultButton() {
-        if (window.self !== window.top) {
-            // Ensure that if our document is in a frame, we get the user
-            // to first open it in its own tab or window. Otherwise, it
-            // won't be able to request permission for camera access.
-            document.querySelector(".contentarea").remove();
-            const button = document.createElement("button");
-            button.textContent = "View live result of the example code above";
-            document.body.append(button);
-            button.addEventListener("click", () => window.open(location.href));
-            return true;
-        }
-        return false;
-    }
-
     function startup() {
-        if (showViewLiveResultButton()) {
-            return;
-        }
         video = document.getElementById("video");
         canvas = document.getElementById("canvas");
         photo = document.getElementById("photo");
@@ -48,11 +34,15 @@
 
         navigator.mediaDevices
             .getUserMedia({
-                video: { facingMode: "environment" },
+                video: {
+                    height: "350",
+                    width: "320",
+                    facingMode: "environment",
+                },
                 audio: false,
             })
             .then((stream) => {
-                video.srcObject = stream;
+                video.srcObject = _stream = stream;
                 video.play();
             })
             .catch((err) => {
@@ -82,14 +72,13 @@
             false,
         );
 
-        startbutton.addEventListener(
+        /* startbutton.addEventListener(
             "click",
             (ev) => {
-                takepicture();
                 ev.preventDefault();
             },
             false,
-        );
+        ); */
 
         clearphoto();
     }
@@ -103,7 +92,7 @@
         context.fillRect(0, 0, canvas.width, canvas.height);
 
         const data = canvas.toDataURL("image/png");
-        photo.setAttribute("src", data);
+        //photo.setAttribute("src", data);
     }
 
     // Capture a photo by fetching the current contents of the video
@@ -121,9 +110,9 @@
 
             const data = canvas.toDataURL("image/png");
             doOcr(data);
-            photo.setAttribute("src", data);
+            //photo.setAttribute("src", data);
         } else {
-            clearphoto();
+            //clearphoto();
         }
     }
 
@@ -131,8 +120,9 @@
         const worker = await createWorker("eng");
         const ret = await worker.recognize(img);
         console.log(ret.data.text);
-        message += ret.data.text;
+        message = ret.data.text;
         await worker.terminate();
+        scanning = false;
     }
 
     onMount(async () => {
@@ -143,12 +133,61 @@
     });
 </script>
 
-<div class="camera">
-    <video id="video">Video stream not available.</video>
-    <button id="startbutton">Take photo</button>
+<!-- safe area -->
+<div
+    class="flex h-[100dvh] w-[100dvw] items-center justify-center flex-col gap-7 bg-teal-200"
+>
+    <!-- card -->
+    <div
+        class="flex flex-col rounded-3xl h-[80%] w-[90%] bg-teal-900 justify-between items-center"
+    >
+        <div class="flex flex-col">
+            <span class=" font-broadway text-white w-full p-6 text-center"
+                >Coco Rido</span
+            >
+            <video
+                class={scanning ? "" : "hidden"}
+                id="video"
+                autoPlay={true}
+                playsInline={true}
+                muted={true}>Video stream not available.</video
+            >
+            {#if scanning}{:else}
+                <p class=" text-white text-3xl px-6">{message}</p>
+            {/if}
+        </div>
+        <div class=" flex justify-between w-full p-8">
+            <span class="material-symbols-outlined text-white"> nature </span>
+            <span class="material-symbols-outlined text-white"> group </span>
+        </div>
+    </div>
+    {#if scanning}
+        <!-- shutter -->
+        <div
+            class="flex items-center justify-center w-20 h-20 rounded-full bg-white"
+        >
+            <button
+                on:click|preventDefault={takepicture}
+                class=" w-16 h-16 rounded-full bg-white border border-black"
+            ></button>
+        </div>
+    {:else}
+        <button
+            on:click={() => {
+                scanning = true;
+            }}
+        >
+            <span
+                class="material-symbols-outlined text-white font-bold text-5xl"
+            >
+                replay
+            </span>
+        </button>
+    {/if}
 </div>
+
 <canvas id="canvas" class="hidden"> </canvas>
-<div class="output">
+
+<!-- <div class="output">
     <img id="photo" alt="The screen capture will appear in this box." />
-</div>
-<p>{message}</p>
+</div> -->

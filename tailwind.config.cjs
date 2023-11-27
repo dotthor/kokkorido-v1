@@ -4,6 +4,9 @@ const config = {
 
   theme: {
     extend: {},
+    fontFamily: {
+      broadway: ['broadway']
+    }
   },
 
   plugins: [],
