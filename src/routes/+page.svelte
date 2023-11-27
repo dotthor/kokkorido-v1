@@ -153,7 +153,14 @@
                 muted={true}>Video stream not available.</video
             >
             {#if scanning}{:else}
-                <p class=" text-white text-3xl px-6">{message}</p>
+                <p class=" text-white text-3xl px-6" contenteditable="true">
+                    {message}
+                </p>
+                <!-- <input
+                    type="text"
+                    class="bg-teal-900 text-white text-3xl px-6"
+                    bind:value={message}
+                /> -->
             {/if}
         </div>
         <div class=" flex justify-between w-full p-8">
