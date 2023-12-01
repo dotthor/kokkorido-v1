@@ -101,28 +101,138 @@
     // drawing that to the screen, we can change its size and/or apply
     // other changes before drawing it.
 
-    function takepicture() {
+    async function takepicture() {
         const context = canvas.getContext("2d");
         if (width && height) {
             canvas.width = width;
             canvas.height = height;
+            //context.filter = "contrast(0.8)";
             context.drawImage(video, 0, 0, width, height);
 
-            const data = canvas.toDataURL("image/png");
-            doOcr(data);
+            //const data = canvas.toDataURL("image/png");
             //photo.setAttribute("src", data);
+
+            let src = cv.imread(canvas);
+            let dst = new cv.Mat();
+            //cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+            // You can try more different parameters
+            /* cv.adaptiveThreshold(
+                src,
+                dst,
+                200,
+                cv.ADAPTIVE_THRESH_MEAN_C,
+                cv.THRESH_BINARY,
+                3,
+                2,
+            ); */
+            cv.threshold(src, dst, 177, 200, cv.THRESH_BINARY);
+            //context.drawImage(dst, 0, 0);
+            cv.imshow(canvas, dst);
+
+            const data = canvas.toDataURL("image/png");
+            //cv.imshow('canvasOutput', dst);
+
+            doOcr(data /* "/imgs/test-color-correction-3.jpg" */);
+            src.delete();
+            dst.delete();
+
+            //await doOcr();
+            //colorFix("/imgs/test-color-correction-2.jpg");
         } else {
             //clearphoto();
         }
     }
 
     async function doOcr(img) {
-        const worker = await createWorker("eng");
-        const ret = await worker.recognize(img);
+        const worker = await createWorker("ita");
+        const ret = await worker.recognize(
+            img,
+            { rotateAuto: true },
+            { imageColor: true, imageGrey: true, imageBinary: true },
+        );
+        document.getElementById("imgBinary").src = ret.data.imageBinary;
+        document.getElementById("imgOriginal").src = ret.data.imageColor;
+        document.getElementById("imgGrey").src = ret.data.imageGrey;
         console.log(ret.data.text);
         message = ret.data.text;
         await worker.terminate();
+
         scanning = false;
+    }
+
+    function colorFix(imagePath) {
+        const imgElement = document.createElement("img");
+        imgElement.src = imagePath;
+
+        imgElement.onload = () => {
+            const imgMat = cv.imread(imgElement);
+
+            // Separa i piani RGB
+            const rgbPlanes = new cv.MatVector();
+            cv.split(imgMat, rgbPlanes);
+
+            const resultPlanes = new cv.MatVector();
+            const resultNormPlanes = new cv.MatVector();
+
+            for (let i = 0; i < rgbPlanes.size(); ++i) {
+                // Dilatazione
+                const dilatedImg = new cv.Mat();
+                cv.dilate(
+                    rgbPlanes.get(i),
+                    dilatedImg,
+                    new cv.Mat(),
+                    new cv.Point(-1, -1),
+                    7,
+                );
+
+                // Sfondo
+                const bgImg = new cv.Mat();
+                cv.medianBlur(dilatedImg, bgImg, 21);
+
+                // Differenza tra piano e sfondo
+                const diffImg = new cv.Mat();
+                cv.absdiff(rgbPlanes.get(i), bgImg, diffImg);
+                const invertedDiffImg = new cv.Mat();
+                cv.bitwise_not(diffImg, invertedDiffImg);
+
+                // Normalizzazione
+                const normImg = new cv.Mat();
+                cv.normalize(
+                    invertedDiffImg,
+                    normImg,
+                    0,
+                    255,
+                    cv.NORM_MINMAX,
+                    cv.CV_8UC1,
+                );
+
+                resultPlanes.push_back(diffImg);
+                resultNormPlanes.push_back(normImg);
+
+                // Rilascia le risorse delle matrici temporanee
+                dilatedImg.delete();
+                bgImg.delete();
+                invertedDiffImg.delete();
+            }
+
+            // Combina i piani risultanti
+            const result = new cv.Mat();
+            cv.merge(resultPlanes, result);
+
+            const resultNorm = new cv.Mat();
+            cv.merge(resultNormPlanes, resultNorm);
+
+            // Scrivi i risultati su file (o fai quello che preferisci)
+            /* cv.imwrite("shadows_out.png", result);
+            cv.imwrite("shadows_out_norm.png", resultNorm); */
+
+            cv.imshow("canvasOutput", resultNorm);
+            // Rilascia le risorse delle matrici
+            imgMat.delete();
+            result.delete();
+            resultNorm.delete();
+            //return cv.imencode(".png", resultNorm);
+        };
     }
 
     onMount(async () => {
@@ -130,6 +240,7 @@
         // once loading is complete.
         //window.addEventListener("load", startup, false);
         startup();
+        //doOcr("/imgs/test-color-correction.jpg");
     });
 </script>
 
@@ -192,9 +303,26 @@
         </button>
     {/if}
 </div>
+<div class="column">
+    <p>Rotated, Original Color</p>
+    <img id="imgOriginal" style="max-width:500px;" />
+</div>
+<div class="column">
+    <p>Rotated, Grey</p>
+    <img id="imgGrey" style="max-width:500px;" />
+</div>
+<div class="column">
+    <p>Rotated, Binary</p>
+    <img id="imgBinary" style="max-width:500px;" />
+</div>
 
-<canvas id="canvas" class="hidden"> </canvas>
-
-<!-- <div class="output">
-    <img id="photo" alt="The screen capture will appear in this box." />
-</div> -->
+<canvas id="canvas" class=""> </canvas>
+<!-- <canvas id="canvasOutput"></canvas> -->
+<!-- <div class="output"> -->
+<!-- <img
+    id="photo"
+    class=""
+    src="/imgs/test-color-correction-2.jpg"
+    alt="The screen capture will appear in this box."
+/> -->
+<!-- </div> -->
