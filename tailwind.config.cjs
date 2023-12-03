@@ -5,7 +5,8 @@ const config = {
   theme: {
     extend: {},
     fontFamily: {
-      broadway: ['broadway']
+      broadway: ['broadway'],
+      nunito: ['nunito']
     }
   },
 

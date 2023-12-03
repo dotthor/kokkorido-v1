@@ -35,7 +35,7 @@
         navigator.mediaDevices
             .getUserMedia({
                 video: {
-                    height: "350",
+                    height: "500",
                     width: "320",
                     facingMode: "environment",
                 },
@@ -150,89 +150,14 @@
             { rotateAuto: true },
             { imageColor: true, imageGrey: true, imageBinary: true },
         );
-        document.getElementById("imgBinary").src = ret.data.imageBinary;
+        /* document.getElementById("imgBinary").src = ret.data.imageBinary;
         document.getElementById("imgOriginal").src = ret.data.imageColor;
-        document.getElementById("imgGrey").src = ret.data.imageGrey;
+        document.getElementById("imgGrey").src = ret.data.imageGrey; */
         console.log(ret.data.text);
         message = ret.data.text;
         await worker.terminate();
 
         scanning = false;
-    }
-
-    function colorFix(imagePath) {
-        const imgElement = document.createElement("img");
-        imgElement.src = imagePath;
-
-        imgElement.onload = () => {
-            const imgMat = cv.imread(imgElement);
-
-            // Separa i piani RGB
-            const rgbPlanes = new cv.MatVector();
-            cv.split(imgMat, rgbPlanes);
-
-            const resultPlanes = new cv.MatVector();
-            const resultNormPlanes = new cv.MatVector();
-
-            for (let i = 0; i < rgbPlanes.size(); ++i) {
-                // Dilatazione
-                const dilatedImg = new cv.Mat();
-                cv.dilate(
-                    rgbPlanes.get(i),
-                    dilatedImg,
-                    new cv.Mat(),
-                    new cv.Point(-1, -1),
-                    7,
-                );
-
-                // Sfondo
-                const bgImg = new cv.Mat();
-                cv.medianBlur(dilatedImg, bgImg, 21);
-
-                // Differenza tra piano e sfondo
-                const diffImg = new cv.Mat();
-                cv.absdiff(rgbPlanes.get(i), bgImg, diffImg);
-                const invertedDiffImg = new cv.Mat();
-                cv.bitwise_not(diffImg, invertedDiffImg);
-
-                // Normalizzazione
-                const normImg = new cv.Mat();
-                cv.normalize(
-                    invertedDiffImg,
-                    normImg,
-                    0,
-                    255,
-                    cv.NORM_MINMAX,
-                    cv.CV_8UC1,
-                );
-
-                resultPlanes.push_back(diffImg);
-                resultNormPlanes.push_back(normImg);
-
-                // Rilascia le risorse delle matrici temporanee
-                dilatedImg.delete();
-                bgImg.delete();
-                invertedDiffImg.delete();
-            }
-
-            // Combina i piani risultanti
-            const result = new cv.Mat();
-            cv.merge(resultPlanes, result);
-
-            const resultNorm = new cv.Mat();
-            cv.merge(resultNormPlanes, resultNorm);
-
-            // Scrivi i risultati su file (o fai quello che preferisci)
-            /* cv.imwrite("shadows_out.png", result);
-            cv.imwrite("shadows_out_norm.png", resultNorm); */
-
-            cv.imshow("canvasOutput", resultNorm);
-            // Rilascia le risorse delle matrici
-            imgMat.delete();
-            result.delete();
-            resultNorm.delete();
-            //return cv.imencode(".png", resultNorm);
-        };
     }
 
     onMount(async () => {
@@ -250,22 +175,26 @@
 >
     <!-- card -->
     <div
-        class="flex flex-col rounded-3xl h-[80%] w-[90%] bg-teal-900 justify-between items-center"
+        class="flex flex-col rounded-3xl h-[70%] bg-teal-900 justify-between items-center card-ratio"
     >
         <div class="flex flex-col">
             <span class=" font-broadway text-white w-full p-6 text-center"
                 >Coco Rido</span
             >
-            <video
-                class={scanning ? "" : "hidden"}
-                id="video"
-                autoPlay={true}
-                playsInline={true}
-                muted={true}>Video stream not available.</video
-            >
-            {#if scanning}{:else}
-                <p class=" text-white text-3xl px-6" contenteditable="true">
-                    {message}
+
+            {#if scanning}<video
+                    class={scanning ? " w-full" : "hidden"}
+                    id="video"
+                    autoPlay={true}
+                    playsInline={true}
+                    muted={true}>Video stream not available.</video
+                >{:else}
+                <p
+                    class="text-white text-2xl tracking-wider px-6 font-nunito"
+                    contenteditable="true"
+                >
+                    {message}<!-- ____ accade ogni giorno sulla linea
+                    regionale Roma - Viterbo -->
                 </p>
                 <!-- <input
                     type="text"
@@ -303,7 +232,7 @@
         </button>
     {/if}
 </div>
-<div class="column">
+<!-- <div class="column">
     <p>Rotated, Original Color</p>
     <img id="imgOriginal" style="max-width:500px;" />
 </div>
@@ -314,9 +243,10 @@
 <div class="column">
     <p>Rotated, Binary</p>
     <img id="imgBinary" style="max-width:500px;" />
-</div>
+</div> -->
 
-<canvas id="canvas" class=""> </canvas>
+<canvas id="canvas" class="hidden"> </canvas>
+
 <!-- <canvas id="canvasOutput"></canvas> -->
 <!-- <div class="output"> -->
 <!-- <img
@@ -326,3 +256,8 @@
     alt="The screen capture will appear in this box."
 /> -->
 <!-- </div> -->
+<style>
+    .card-ratio {
+        aspect-ratio: 55/86;
+    }
+</style>
