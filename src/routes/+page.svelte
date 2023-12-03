@@ -3,6 +3,7 @@
     import { createWorker, createScheduler } from "tesseract.js";
 
     let scanning = true;
+    let processing = false;
 
     let _stream;
 
@@ -102,6 +103,8 @@
     // other changes before drawing it.
 
     async function takepicture() {
+        processing = true;
+        scanning = false;
         const context = canvas.getContext("2d");
         if (width && height) {
             canvas.width = width;
@@ -157,7 +160,7 @@
         message = ret.data.text;
         await worker.terminate();
 
-        scanning = false;
+        processing = false;
     }
 
     onMount(async () => {
@@ -175,22 +178,40 @@
 >
     <!-- card -->
     <div
-        class="flex flex-col rounded-3xl h-[70%] bg-teal-900 justify-between items-center card-ratio"
+        class="flex flex-col rounded-3xl w-[85%] bg-teal-900 justify-between items-center card-ratio"
     >
         <div class="flex flex-col">
             <span class=" font-broadway text-white w-full p-6 text-center"
                 >Coco Rido</span
             >
-
-            {#if scanning}<video
-                    class={scanning ? " w-full" : "hidden"}
+            {#if processing}
+                <div class="animate-pulse flex space-x-4 w-full">
+                    <div class="flex-1 space-y-6 py-1">
+                        <div class="h-2 bg-white rounded"></div>
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-3 gap-4">
+                                <div
+                                    class="h-2 bg-white rounded col-span-2"
+                                ></div>
+                                <div
+                                    class="h-2 bg-white rounded col-span-1"
+                                ></div>
+                            </div>
+                            <div class="h-2 bg-white rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            {:else if scanning}
+                <video
+                    class={scanning ? "w-full px-1" : "hidden"}
                     id="video"
                     autoPlay={true}
                     playsInline={true}
                     muted={true}>Video stream not available.</video
-                >{:else}
+                >
+            {:else}
                 <p
-                    class="text-white text-2xl tracking-wider px-6 font-nunito"
+                    class="text-white text-2xl tracking-[0.07rem] px-6 font-nunito"
                     contenteditable="true"
                 >
                     {message}<!-- ____ accade ogni giorno sulla linea
@@ -211,7 +232,7 @@
     {#if scanning}
         <!-- shutter -->
         <div
-            class="flex items-center justify-center w-20 h-20 rounded-full bg-white"
+            class="flex items-center justify-center w-20 h-20 rounded-full px-1 bg-white"
         >
             <button
                 on:click|preventDefault={takepicture}
@@ -222,6 +243,9 @@
         <button
             on:click={() => {
                 scanning = true;
+                processing = false;
+                console.log(scanning);
+                console.log(processing);
             }}
         >
             <span
