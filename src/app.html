@@ -13,11 +13,11 @@
 <body data-sveltekit-preload-data="hover">
 	<div style="display: contents">%sveltekit.body%</div>
 	<!-- <script async src="https://docs.opencv.org/4.8.0/opencv.js" type="text/javascript"></script> -->
-	<script async src="/src/lib/js/opencv4.8.0.js" type="text/javascript"></script>
+	<script async src="%sveltekit.assets%/js/opencv4.8.0.js" type="text/javascript"></script>
 </body>
 <style>
 	body {
-		background-image: url(/src/lib/imgs/wood_bg.svg);
+		background-image: url(%sveltekit.assets%/imgs/wood_bg.svg);
 	}
 </style>
 
