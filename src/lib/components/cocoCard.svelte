@@ -17,7 +17,7 @@
 
     let splittedPhrase = null;
 
-    function splittaStringaConUnderscores(input) {
+    function splittaStringaConUnderscore(input) {
         // Utilizziamo una regex per trovare due o più underscore consecutivi
         const regex = /_+/;
 
@@ -46,61 +46,9 @@
         return risultatoFinale;
     }
 
-    // Esempio di utilizzo
-    const inputString = "___ abc __ def ___ ghi ____";
-    const risultatoArray = splittaStringaConUnderscores(inputString);
-    console.log(risultatoArray);
-
-    function splitAndReplaceBlanks(input) {
-        const result = [];
-        const blankToken = "#BLANK#";
-        let currentSegment = "";
-        let insideBlank = false;
-
-        for (let i = 0; i < input.length; i++) {
-            if (input[i] === "_" && input[i + 1] === "_") {
-                // Trovato un blank, aggiungi il segmento corrente all'array e aggiungi il token blank
-                if (currentSegment.trim() !== "") {
-                    result.push(currentSegment.trim());
-                }
-                if (!insideBlank) {
-                    result.push(blankToken);
-                    insideBlank = true;
-                }
-                currentSegment = "";
-                i++; // Salta il secondo carattere del blank
-            } else {
-                // Continua a costruire il segmento corrente
-                currentSegment += input[i];
-                insideBlank = false;
-            }
-        }
-
-        // Aggiungi l'ultimo segmento non vuoto all'array
-        if (currentSegment.trim() !== "") {
-            result.push(currentSegment.trim());
-        }
-
-        return result;
-    }
-
     function processBlanks() {
-        splittedPhrase = splittaStringaConUnderscores(phrase);
-        /* splittedPhrase = splitAndReplaceBlanks(phrase); */
+        splittedPhrase = splittaStringaConUnderscore(phrase);
         console.log(splittedPhrase);
-    }
-
-    function splittaStringaConUnderscore(input) {
-        // Utilizziamo una regex per trovare due o più underscore consecutivi
-        const regex = /_+/;
-
-        // Splittiamo la stringa usando la regex come delimitatore
-        const risultato = input.split(regex);
-
-        // Rimuoviamo eventuali elementi vuoti nell'array risultante
-        const risultatoFinale = risultato.filter((str) => str.trim() !== "");
-
-        return risultatoFinale;
     }
 
     function showCameraFeed() {
@@ -256,10 +204,11 @@
             </div>
         {:else if !scanning && !postProcessing}
             <p
+                bind:innerText={phrase}
                 class="text-white text-2xl tracking-[0.07rem] px-6 font-nunito"
                 contenteditable="true"
             >
-                {phrase}<!-- ____ accade ogni giorno sulla linea
+                <!-- {phrase} --><!-- ____ accade ogni giorno sulla linea
                     regionale Roma - Viterbo -->
             </p>
         {:else if !scanning}
@@ -301,6 +250,7 @@
                     on:click={() => {
                         scanning = true;
                         processing = false;
+                        phrase = "";
                     }}
                 >
                     <span
