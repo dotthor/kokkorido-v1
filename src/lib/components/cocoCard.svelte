@@ -17,8 +17,77 @@
 
     let splittedPhrase = null;
 
+    function splittaStringaConUnderscores(input) {
+        // Utilizziamo una regex per trovare due o più underscore consecutivi
+        const regex = /_+/;
+
+        // Splittiamo la stringa usando la regex come delimitatore
+        const risultato = input.split(regex);
+
+        // Rimuoviamo eventuali elementi vuoti nell'array risultante
+        const risultatoFinale = risultato.flatMap((str, index, array) => {
+            // Aggiungi #BLANK# all'inizio se la stringa iniziale è vuota
+            if (index === 0 && str.trim() === "") {
+                return ["#BLANK#"];
+            }
+
+            // Aggiungi solo se la stringa non è vuota
+            if (str.trim() !== "") {
+                // Aggiungi anche #BLANK# se non è l'ultimo elemento dell'array
+                if (index < array.length - 1) {
+                    return [str, "#BLANK#"];
+                } else {
+                    return [str];
+                }
+            }
+            return []; // Altrimenti, non aggiungere nulla
+        });
+
+        return risultatoFinale;
+    }
+
+    // Esempio di utilizzo
+    const inputString = "___ abc __ def ___ ghi ____";
+    const risultatoArray = splittaStringaConUnderscores(inputString);
+    console.log(risultatoArray);
+
+    function splitAndReplaceBlanks(input) {
+        const result = [];
+        const blankToken = "#BLANK#";
+        let currentSegment = "";
+        let insideBlank = false;
+
+        for (let i = 0; i < input.length; i++) {
+            if (input[i] === "_" && input[i + 1] === "_") {
+                // Trovato un blank, aggiungi il segmento corrente all'array e aggiungi il token blank
+                if (currentSegment.trim() !== "") {
+                    result.push(currentSegment.trim());
+                }
+                if (!insideBlank) {
+                    result.push(blankToken);
+                    insideBlank = true;
+                }
+                currentSegment = "";
+                i++; // Salta il secondo carattere del blank
+            } else {
+                // Continua a costruire il segmento corrente
+                currentSegment += input[i];
+                insideBlank = false;
+            }
+        }
+
+        // Aggiungi l'ultimo segmento non vuoto all'array
+        if (currentSegment.trim() !== "") {
+            result.push(currentSegment.trim());
+        }
+
+        return result;
+    }
+
     function processBlanks() {
-        splittedPhrase = splittaStringaConUnderscore(phrase);
+        splittedPhrase = splittaStringaConUnderscores(phrase);
+        /* splittedPhrase = splitAndReplaceBlanks(phrase); */
+        console.log(splittedPhrase);
     }
 
     function splittaStringaConUnderscore(input) {
@@ -57,7 +126,7 @@
                     height: "500",
                     width: "320",
                     facingMode: "environment",
-                    zoom: "2",
+                    zoom: "1.5",
                     // TODO: metto di default 1 ma poi aggiungere nei settings un modo per regolare in caso si faccia fatica a mettere a fuoco
                 },
                 audio: false,
@@ -194,13 +263,22 @@
                     regionale Roma - Viterbo -->
             </p>
         {:else if !scanning}
-            <p class="text-white text-2xl tracking-[0.07rem] px-6 font-nunito">
+            <p class="text-white text-2xl tracking-[0.07rem] px-5 font-nunito">
                 {#each splittedPhrase as phrasePiece}
-                    {phrasePiece}
-                    <input
-                        class="text-white text-2xl tracking-[0.07rem] px-6 font-nunito inline-block bg-transparent"
-                        type="text"
-                    />
+                    <!-- {index} -->
+                    {#if phrasePiece === "#BLANK#"}
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <div
+                            on:keypress={(e) => {
+                                if (e.code === "Enter") e.preventDefault();
+                                console.log(e);
+                            }}
+                            contenteditable
+                            class="text-yellow-500 border-b border-yellow-500 h-7 min-w-[3rem] animate-pulse inline-block"
+                        ></div>
+                    {:else}
+                        {phrasePiece}
+                    {/if}
                 {/each}
             </p>
         {/if}
