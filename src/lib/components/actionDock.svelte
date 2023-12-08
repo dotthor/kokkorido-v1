@@ -1,24 +1,32 @@
-{#if scanning}
-    <!-- shutter -->
-    <div
-        class="flex items-center justify-center w-20 h-20 rounded-full px-1 bg-white"
-    >
+<script>
+    export let confirmAction = "";
+    export let cancelAction = "";
+    export let actionsSelected = [];
+
+    const actionsAvailable = [
+        { name: "back", icon: "arrow_back", cb: "history.back()" },
+        { name: "forward", icon: "arrow_forward", cb: "history.forward()" },
+        { name: "confirm", icon: "check", cb: confirmAction },
+        { name: "cancel", icon: "close", cb: cancelAction },
+    ];
+
+    const actions = actionsAvailable.filter((obj) =>
+        actionsSelected.includes(obj.name),
+    );
+</script>
+
+<div class="bg-white rounded-[2.5rem] flex justify-evenly p-5 gap-6 w-full">
+    {#each actions as action}
         <button
-            on:click|preventDefault={takepicture}
-            class=" w-16 h-16 rounded-full bg-white border border-black"
-        ></button>
-    </div>
-{:else}
-    <button
-        on:click={() => {
-            scanning = true;
-            processing = false;
-            console.log(scanning);
-            console.log(processing);
-        }}
-    >
-        <span class="material-symbols-outlined text-white font-bold text-5xl">
-            replay
-        </span>
-    </button>
-{/if}
+            type="button"
+            class="flex justify-center items-center rounded-xl w-16 h-16 p-4 bg-yellow-400"
+            on:click={() => eval(action.cb)}
+        >
+            <span
+                class="material-symbols-outlined font-bold text-red-500 text-3xl"
+            >
+                {action.icon}
+            </span>
+        </button>
+    {/each}
+</div>
