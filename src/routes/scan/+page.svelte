@@ -20,6 +20,14 @@
         );
         qrScanner.start();
     });
+
+    function _doAction(event) {
+        const action = event.detail.action;
+
+        if (action === "confirm") {
+            console.log(scanResult);
+        }
+    }
 </script>
 
 <div class="flex flex-col w-full h-full justify-between">
@@ -33,7 +41,7 @@
     <div class="m-4">
         <ActionDock
             actionsSelected={["back", "confirm"]}
-            confirmAction={"location.href='/scan'"}
+            on:actionPressed={_doAction}
         ></ActionDock>
     </div>
 </div>

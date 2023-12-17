@@ -7,26 +7,45 @@
     function setNick(f) {
         const formData = new FormData(f.target);
         const nickname = formData.get("nickname");
+        const lobbyTempId = formData.get("lobbyTempId");
         console.log(nickname);
-        appStatus.updateState({ nickname: nickname });
 
-        goto("/scan");
+        appStatus.updateState({ nickname: nickname, lobbyId: lobbyTempId });
+        //goto("/scan");
+        goto("/lobby");
+    }
+
+    function _doAction(event) {
+        //console.log(event);
+        const action = event.detail.action;
+        switch (action) {
+            case "confirm":
+                console.log(action);
+                document.getElementById("nick-form").requestSubmit();
+                break;
+            case "cancel":
+                console.log(action);
+                break;
+            default:
+                break;
+        }
     }
 </script>
 
 <div class="flex flex-col w-full h-full justify-between">
     <form
+        id="nick-form"
         on:submit|preventDefault={setNick}
         class="flex flex-col w-full items-center mt-6"
     >
         <CstmInputField name={"nickname"}></CstmInputField>
-        <button>PROVA</button>
+        <CstmInputField name={"lobbyTempId"}></CstmInputField>
     </form>
 
     <div class="m-4">
         <ActionDock
             actionsSelected={["back", "confirm"]}
-            confirmAction={"location.href='/scan'"}
+            on:actionPressed={_doAction}
         ></ActionDock>
     </div>
 </div>
