@@ -3,23 +3,37 @@
     import CstmInputField from "../../lib/components/cstmInputField.svelte";
     import { appStatus } from "$lib/stores";
     import { goto } from "$app/navigation";
+    import QRCode from "qrcode";
 
     function createGame(f) {
         const formData = new FormData(f.target);
         const nickname = formData.get("nickname");
         const timer = formData.get("timer");
         const lobbyTempId = formData.get("lobbyTempId");
-        console.log(nickname);
 
-        appStatus.updateState({
-            nickname: nickname,
-            timer: timer,
-            lobbyId:
-                lobbyTempId > ""
-                    ? lobbyTempId
-                    : Math.floor(Math.random() * 10000000).toString(),
-        });
-        goto("/lobby");
+        QRCode.toDataURL(lobbyTempId, {
+            type: "image/png",
+            margin: 1,
+        })
+            .then((result) => {
+                console.log(result);
+                appStatus.updateState({
+                    nickname: `${nickname}#${Math.floor(
+                        Math.random() * 100000,
+                    ).toString()}`,
+                    timer: timer,
+                    lobbyId:
+                        lobbyTempId > ""
+                            ? lobbyTempId
+                            : Math.floor(Math.random() * 10000000).toString(),
+                    iAmHost: true,
+                    qrcode: result,
+                });
+                goto("/lobby");
+            })
+            .catch((err) => {
+                console.error(err);
+            });
     }
 
     function _doAction(event) {

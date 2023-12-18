@@ -5,10 +5,10 @@ export const supabase = createClient('https://ppddtihaakyfivzrzzem.supabase.co',
 
 export const countries = writable();
 
-const startingAppState = {};
+const startingAppStatus = {};
 
 function createAppStatus() {
-    const { subscribe, set, update } = writable(startingAppState);
+    const { subscribe, set, update } = writable(startingAppStatus);
 
     return {
         subscribe,
@@ -16,9 +16,14 @@ function createAppStatus() {
             set(initState);
         },
         updateState: (stateChange) => {
-            update((oldState) => ({ ...oldState, ...stateChange }));
+            update((oldState) => {
+                const newState = { ...oldState, ...stateChange };
+                localStorage.setItem("appStatus", JSON.stringify(newState));
+                return newState;
+            });
+
         },
-        reset: () => set(startingAppState)
+        reset: () => set(startingAppStatus)
     };
 }
 

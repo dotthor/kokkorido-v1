@@ -1,6 +1,15 @@
 <script>
     import CstmButton from "../lib/components/cstmButton.svelte";
-    import { countries } from "$lib/stores.js";
+    import { appStatus } from "$lib/stores.js";
+    /* import { onMount } from "svelte";
+
+    onMount(() => {
+        const savedAppStatus = localStorage.getItem("appStatus");
+        console.log(savedAppStatus);
+        if (savedAppStatus) {
+            appStatus.initialize(JSON.parse(savedAppStatus));
+        }
+    }); */
 </script>
 
 <div class="flex flex-col h-full w-full items-center justify-evenly">
@@ -11,4 +20,6 @@
         <CstmButton url={"partecipa"}></CstmButton>
     </div>
     <CstmButton url={"impostazioni"}></CstmButton>
+    <h1>{$appStatus.nickname}</h1>
+    <h1>{$appStatus.timer}</h1>
 </div>

@@ -10,9 +10,14 @@
         const lobbyTempId = formData.get("lobbyTempId");
         console.log(nickname);
 
-        appStatus.updateState({ nickname: nickname, lobbyId: lobbyTempId });
-        //goto("/scan");
-        goto("/lobby");
+        appStatus.updateState({
+            nickname: `${nickname}#${Math.floor(
+                Math.random() * 100000,
+            ).toString()}`,
+            lobbyId: lobbyTempId,
+        });
+        goto("/scan");
+        //goto("/lobby");
     }
 
     function _doAction(event) {

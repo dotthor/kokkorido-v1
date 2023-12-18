@@ -3,6 +3,7 @@
     import { onMount } from "svelte";
     import ActionDock from "../../lib/components/actionDock.svelte";
     import { appStatus } from "$lib/stores";
+    import { goto } from "$app/navigation";
 
     let scanResult = "";
 
@@ -12,7 +13,13 @@
             videoElem,
             (result) => {
                 scanResult = result.data;
+
+                appStatus.updateState({
+                    lobbyId: scanResult,
+                });
                 qrScanner.stop();
+
+                goto("/lobby");
             },
             {
                 returnDetailedScanResult: true,
