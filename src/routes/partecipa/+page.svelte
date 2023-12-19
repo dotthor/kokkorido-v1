@@ -15,6 +15,7 @@
                 Math.random() * 100000,
             ).toString()}`,
             lobbyId: lobbyTempId,
+            iAmHost: false,
         });
         goto("/scan");
         //goto("/lobby");

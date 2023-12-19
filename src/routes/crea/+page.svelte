@@ -9,9 +9,12 @@
         const formData = new FormData(f.target);
         const nickname = formData.get("nickname");
         const timer = formData.get("timer");
-        const lobbyTempId = formData.get("lobbyTempId");
+        /* const lobbyTempId = formData.get("lobbyTempId"); */
+        const lobbyId = /* "lobby-" +  */ Math.floor(
+            Math.random() * 10000000,
+        ).toString();
 
-        QRCode.toDataURL(lobbyTempId, {
+        QRCode.toDataURL(lobbyId, {
             type: "image/png",
             margin: 1,
         })
@@ -22,11 +25,9 @@
                         Math.random() * 100000,
                     ).toString()}`,
                     timer: timer,
-                    lobbyId:
-                        lobbyTempId > ""
-                            ? lobbyTempId
-                            : Math.floor(Math.random() * 10000000).toString(),
+                    lobbyId: lobbyId,
                     iAmHost: true,
+
                     qrcode: result,
                 });
                 goto("/lobby");
@@ -61,7 +62,7 @@
     >
         <CstmInputField name={"nickname"}></CstmInputField>
         <CstmInputField name={"timer"}></CstmInputField>
-        <CstmInputField name={"lobbyTempId"}></CstmInputField>
+        <!-- <CstmInputField name={"lobbyTempId"}></CstmInputField> -->
     </form>
 
     <div class="m-4">
