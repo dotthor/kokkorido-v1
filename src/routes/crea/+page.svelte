@@ -14,7 +14,12 @@
             Math.random() * 10000000,
         ).toString();
 
-        QRCode.toDataURL(lobbyId, {
+        const qrData = JSON.stringify({
+            lobbyId: lobbyId,
+            hostNickname: nickname,
+        });
+
+        QRCode.toDataURL(qrData, {
             type: "image/png",
             margin: 1,
         })

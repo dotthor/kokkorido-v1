@@ -12,10 +12,11 @@
         const qrScanner = new QrScanner(
             videoElem,
             (result) => {
-                scanResult = result.data;
+                scanResult = JSON.parse(result.data);
 
                 appStatus.updateState({
-                    lobbyId: scanResult,
+                    lobbyId: scanResult.lobbyId,
+                    hostNickname: scanResult.hostNickname,
                 });
                 qrScanner.stop();
 
