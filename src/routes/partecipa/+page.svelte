@@ -16,6 +16,7 @@
             ).toString()}`,
             lobbyId: lobbyTempId,
             iAmHost: false,
+            isReady: false,
         });
         goto("/scan");
         //goto("/lobby");

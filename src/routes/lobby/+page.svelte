@@ -6,10 +6,33 @@
 
     let playersInLobby = [];
     let lobby;
+    let everyoneReady = false;
+    let imReady = null;
+    let domReady = false;
+
+    $: if (imReady == true && domReady) {
+        lobby.send({
+            type: "broadcast",
+            event: "ready",
+            payload: {
+                nickname: $appStatus.nickname,
+                isReady: true,
+            },
+        });
+    } else if (imReady == false && domReady) {
+        lobby.send({
+            type: "broadcast",
+            event: "ready",
+            payload: {
+                nickname: $appStatus.nickname,
+                isReady: false,
+            },
+        });
+    }
 
     onMount(async () => {
         //console.log($appStatus);
-
+        //console.log($players);
         lobby = await startMultiplayer($appStatus.lobbyId);
 
         lobby
@@ -17,12 +40,39 @@
                 const newState = players.set(
                     Object.values(lobby.presenceState()).flat(),
                 );
-
-                console.log($players);
+                lobby.send({
+                    type: "broadcast",
+                    event: "ready",
+                    payload: {
+                        nickname: $appStatus.nickname,
+                        isReady: imReady,
+                    },
+                });
+                //console.log($players);
             })
             .on("broadcast", { event: "message" }, (payload) =>
                 console.log(payload.payload.message),
-            );
+            )
+            .on("broadcast", { event: "ready" }, (data) => {
+                //console.log(Object.values(lobby.presenceState()).flat());
+                //console.log(data.payload);
+                updatePlayerReadyState($players, data.payload);
+                checkEveryoneReady($players);
+                //console.log($players);
+            })
+            .on("broadcast", { event: "countdown" }, (data) => {
+                const countdownElement =
+                    document.getElementById("gameStartCountDown");
+                // Verifica se l'elemento del countdown esiste
+                if (countdownElement) {
+                    countdownElement.style.setProperty(
+                        "--value",
+                        data.remainingSeconds,
+                    );
+                }
+            });
+
+        //
 
         /* .on("presence", { event: "sync" }, () => {
                 const newState = lobby.presenceState();
@@ -64,6 +114,7 @@
 
         /* const presenceTrackStatus = await lobby.track(userStatus); */
         //console.log(presenceTrackStatus);
+        domReady = true;
     });
 
     onDestroy(async () => {
@@ -76,12 +127,139 @@
         const action = event.detail.action;
 
         if (action === "confirm") {
-            console.log(scanResult);
+            //console.log(scanResult);
+            lobby.send({
+                type: "broadcast",
+                event: "ready",
+                payload: {
+                    nickname: $appStatus.nickname,
+                    isReady: true,
+                },
+            });
         }
+    }
+
+    function _toggleReady(e) {
+        console.dir(e);
+        /* lobby.send({
+                type: "broadcast",
+                event: "ready",
+                payload: {
+                    nickname: $appStatus.nickname,
+                    isReady: true,
+                },
+            }); */
+    }
+
+    // Funzione per verificare se tutti i giocatori sono pronti
+    function checkEveryoneReady(plyrs) {
+        // Verifica se tutti i giocatori sono pronti
+        everyoneReady = plyrs.every((player) => player.isReady);
+        if (everyoneReady && $appStatus.iAmHost) {
+            setTimeout(_startCountDown_B(5), 1500);
+        }
+        //console.log(players);
+        // Imposta la variabile "everyoneReady" al risultato della verifica
+        //return everyoneReady;
+    }
+
+    function updatePlayerReadyState(plyrs, playerReady) {
+        // Trova l'indice del giocatore corrispondente al nickname nel nuovo oggetto
+        const playerIndex = plyrs.findIndex(
+            (player) => player.user === playerReady.nickname,
+        );
+
+        // Se il giocatore è presente nell'array
+        if (playerIndex !== -1) {
+            // Aggiorna lo stato del giocatore a "pronto"
+            plyrs[playerIndex].isReady = playerReady.isReady;
+            players.set(plyrs);
+        } else {
+            // Il giocatore non è presente nell'array, gestire l'errore se necessario
+            //console.log(players);
+            console.error("Giocatore non trovato nell'array.");
+        }
+    }
+
+    function _startCountDown(seconds) {
+        const countdownElement = document.getElementById("gameStartCountDown");
+        // Verifica se l'elemento del countdown esiste
+        if (countdownElement) {
+            countdownElement.style.setProperty("--value", seconds);
+
+            let remainingSeconds = seconds;
+
+            // Funzione per aggiornare il countdown ogni secondo
+            const updateCountdown = () => {
+                // Verifica se tutti sono pronti
+                if (!everyoneReady) {
+                    // Se la variabile diventa false, interrompi il setInterval
+                    clearInterval(countdownInterval);
+                    console.log("Countdown annullato: non tutti sono pronti.");
+                } else {
+                    // Aggiorna il countdown
+                    countdownElement.style.setProperty(
+                        "--value",
+                        remainingSeconds,
+                    );
+
+                    // Riduci il numero di secondi rimanenti
+                    remainingSeconds--;
+
+                    // Se il countdown raggiunge 0, interrompi il setInterval
+                    if (remainingSeconds < 0) {
+                        clearInterval(countdownInterval);
+                        console.log("Countdown terminato: vai al gioco.");
+                    }
+                }
+            };
+
+            // Avvia l'aggiornamento del countdown ogni secondo
+            const countdownInterval = setInterval(updateCountdown, 1000);
+        } else {
+            console.error("Elemento del countdown non trovato.");
+        }
+    }
+    function _startCountDown_B(seconds) {
+        let remainingSeconds = seconds;
+
+        // Funzione per aggiornare il countdown ogni secondo
+        const updateCountdown = () => {
+            // Verifica se tutti sono pronti
+            if (!everyoneReady) {
+                // Se la variabile diventa false, interrompi il setInterval
+                clearInterval(countdownInterval);
+                console.log("Countdown annullato: non tutti sono pronti.");
+            } else {
+                // Aggiorna il countdown
+                lobby.send({
+                    type: "broadcast",
+                    event: "countdown",
+                    payload: remainingSeconds,
+                });
+
+                // Riduci il numero di secondi rimanenti
+                remainingSeconds--;
+
+                // Se il countdown raggiunge 0, interrompi il setInterval
+                if (remainingSeconds < 0) {
+                    clearInterval(countdownInterval);
+                    console.log("Countdown terminato: vai al gioco.");
+                }
+            }
+        };
+
+        // Avvia l'aggiornamento del countdown ogni secondo
+        const countdownInterval = setInterval(updateCountdown, 1000);
     }
 </script>
 
 <div class="flex flex-col size-full items-center">
+    <!-- {#if everyoneReady} -->
+    <span class="countdown font-mono text-6xl {everyoneReady ? '' : 'hidden'}">
+        <span id="gameStartCountDown" style="--value:5;"></span>
+    </span>
+    <!-- {/if} -->
     {#if $appStatus.iAmHost}
         <span class="text-center p-5 text-5xl font-bold text-white"
             >{$appStatus.nickname.split("#")[0]}</span
@@ -103,8 +281,9 @@
         {#each $players as player}
             <div class="flex border mx-6 gap-5 items-center">
                 <span
-                    class="material-symbols-outlined font-bold text-green-500 text-5xl"
-                    >person</span
+                    class="material-symbols-outlined font-bold {player.isReady
+                        ? 'text-green-500'
+                        : 'text-gray-500'} text-5xl">person</span
                 >
                 <span class="text-2xl font-bold"
                     >{player.user.split("#")[0]}
@@ -130,5 +309,10 @@
             actionsSelected={["back", "confirm"]}
             on:actionPressed={_doAction}
         ></ActionDock>
+        <input
+            bind:checked={imReady}
+            type="checkbox"
+            class="toggle toggle-success"
+        />
     </div>
 </div>

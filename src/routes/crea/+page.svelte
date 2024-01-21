@@ -32,8 +32,8 @@
                     timer: timer,
                     lobbyId: lobbyId,
                     iAmHost: true,
-
                     qrcode: result,
+                    isReady: false,
                 });
                 goto("/lobby");
             })
