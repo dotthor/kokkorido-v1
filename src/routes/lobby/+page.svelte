@@ -3,6 +3,7 @@
     import { onDestroy, onMount } from "svelte";
     import ActionDock from "$lib/components/actionDock.svelte";
     import { startMultiplayer, stopMultiplayer } from "../../lib/commons";
+    import { goto } from "$app/navigation";
 
     let playersInLobby = [];
     let lobby;
@@ -61,15 +62,15 @@
                 //console.log($players);
             })
             .on("broadcast", { event: "countdown" }, (data) => {
+                console.log(data);
                 const countdownElement =
                     document.getElementById("gameStartCountDown");
                 // Verifica se l'elemento del countdown esiste
                 if (countdownElement) {
-                    countdownElement.style.setProperty(
-                        "--value",
-                        data.remainingSeconds,
-                    );
+                    countdownElement.style.setProperty("--value", data.payload);
                 }
+
+                if (data.payload == 0) goto("/game");
             });
 
         //
@@ -156,7 +157,7 @@
         // Verifica se tutti i giocatori sono pronti
         everyoneReady = plyrs.every((player) => player.isReady);
         if (everyoneReady && $appStatus.iAmHost) {
-            setTimeout(_startCountDown_B(5), 1500);
+            _startCountDown_B(5);
         }
         //console.log(players);
         // Imposta la variabile "everyoneReady" al risultato della verifica
